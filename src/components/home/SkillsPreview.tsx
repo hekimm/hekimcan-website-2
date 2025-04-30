@@ -80,7 +80,7 @@ const SkillsPreview = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
           >
-            Uzmanlaştığım teknolojiler ve yazılım geliştirme araçları
+            Öğrenilen ve Öğrenilmekte olan teknolojiler ve yazılım geliştirme araçları
           </motion.p>
         </div>
 
