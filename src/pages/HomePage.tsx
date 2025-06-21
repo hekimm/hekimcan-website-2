@@ -7,7 +7,7 @@ const HomePage = () => {
   return (
     <>
       <Helmet>
-        <title>Hekimcan AKTAŞ | Kıdemli Yazılım Geliştirici</title>
+        <title>Hekimcan AKTAŞ | Junior Yazılım Geliştirici</title>
         <meta name="description" content="Hekimcan AKTAŞ - Kıdemli Yazılım Geliştirici Portfolyosu" />
       </Helmet>
       
