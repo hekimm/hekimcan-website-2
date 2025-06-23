@@ -534,3 +534,4 @@ const EducationTimeline = () => {
 };
 
 export default EducationTimeline;
+  
