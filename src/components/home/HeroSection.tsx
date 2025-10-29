@@ -1,753 +1,590 @@
-"use client"
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowRight, Github, Linkedin, Twitter, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
+import type { Database } from '../../lib/database.types';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import CodeEditor from './CodeEditor';
 
-import type React from "react"
+// GSAP plugin'ini kaydet
+gsap.registerPlugin(ScrollTrigger);
 
-import { useState, useEffect, useRef } from "react"
-import { motion, useScroll, useTransform, useSpring } from "framer-motion"
-import { ArrowRight, Github, Linkedin, Twitter, Play, Sparkles, ChevronDown } from "lucide-react"
-import { Link } from "react-router-dom"
-import { supabase } from "../../lib/supabase"
-import type { Database } from "../../lib/database.types"
-import CodeEditor from "./CodeEditor"
-
-type Profil = Database["public"]["Tables"]["profil"]["Row"]
-
-// Mouse-following button component
-const MouseFollowButton = ({ children, className, ...props }: any) => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const buttonRef = useRef<HTMLAnchorElement>(null)
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left - rect.width / 2
-      const y = e.clientY - rect.top - rect.height / 2
-      setMousePosition({ x: x * 0.1, y: y * 0.1 })
-    }
-  }
-
-  const handleMouseLeave = () => {
-    setMousePosition({ x: 0, y: 0 })
-  }
-
-  const springConfig = { damping: 25, stiffness: 700 }
-  const x = useSpring(mousePosition.x, springConfig)
-  const y = useSpring(mousePosition.y, springConfig)
-
-  return (
-    <motion.div
-      ref={buttonRef}
-      style={{ x, y }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="relative group"
-    >
-      <Link {...props} className={`${className} relative overflow-hidden`}>
-        {/* Animated gradient background */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600"
-          animate={{
-            background: [
-              "linear-gradient(45deg, #3b82f6, #8b5cf6, #06b6d4)",
-              "linear-gradient(45deg, #8b5cf6, #06b6d4, #3b82f6)",
-              "linear-gradient(45deg, #06b6d4, #3b82f6, #8b5cf6)",
-            ],
-          }}
-          transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        />
-
-        {/* Shimmer effect */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-          animate={{ x: ["-100%", "100%"] }}
-          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        />
-
-        {/* Ripple effect */}
-        <motion.div
-          className="absolute inset-0 rounded-2xl"
-          whileHover={{
-            boxShadow: ["0 0 0 0 rgba(59, 130, 246, 0.7)", "0 0 0 20px rgba(59, 130, 246, 0)"],
-          }}
-          transition={{ duration: 0.6 }}
-        />
-
-        <span className="relative z-10">{children}</span>
-      </Link>
-    </motion.div>
-  )
-}
-
-// Mouse-following social link component
-const MouseFollowSocialLink = ({ href, icon, label, color }: any) => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const linkRef = useRef<HTMLAnchorElement>(null)
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (linkRef.current) {
-      const rect = linkRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left - rect.width / 2
-      const y = e.clientY - rect.top - rect.height / 2
-      setMousePosition({ x: x * 0.15, y: y * 0.15 })
-    }
-  }
-
-  const handleMouseLeave = () => {
-    setMousePosition({ x: 0, y: 0 })
-  }
-
-  const springConfig = { damping: 25, stiffness: 700 }
-  const x = useSpring(mousePosition.x, springConfig)
-  const y = useSpring(mousePosition.y, springConfig)
-
-  return (
-    <motion.div style={{ x, y }}>
-      <a
-        ref={linkRef}
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className="relative group w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden"
-        aria-label={label}
-      >
-        {/* Animated background */}
-        <motion.div
-          className={`absolute inset-0 bg-gradient-to-r ${color}`}
-          animate={{
-            scale: [1, 1.1, 1],
-            rotate: [0, 5, -5, 0],
-          }}
-          transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-        />
-
-        {/* Ripple effect */}
-        <motion.div
-          className="absolute inset-0 rounded-2xl"
-          whileHover={{
-            boxShadow: ["0 0 0 0 rgba(255, 255, 255, 0.7)", "0 0 0 15px rgba(255, 255, 255, 0)"],
-          }}
-          transition={{ duration: 0.6 }}
-        />
-
-        {/* Icon */}
-        <motion.div
-          className="relative z-10 text-white"
-          whileHover={{ scale: 1.2, rotate: 10 }}
-          transition={{ type: "spring", stiffness: 400, damping: 10 }}
-        >
-          {icon}
-        </motion.div>
-      </a>
-    </motion.div>
-  )
-}
+type Profil = Database['public']['Tables']['profil']['Row'];
 
 const HeroSection = () => {
-  const [profileData, setProfileData] = useState<Profil | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false)
-  const { scrollY } = useScroll()
-
-  // Parallax effects
-  const y1 = useTransform(scrollY, [0, 300], [0, -50])
-  const y2 = useTransform(scrollY, [0, 300], [0, -100])
-  // const opacity = useTransform(scrollY, [0, 300], [1, 0])
+  const [profileData, setProfileData] = useState<Profil | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // GSAP refs
+  const heroRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  const buttonsRef = useRef<HTMLDivElement>(null);
+  const socialRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const codeEditorRef = useRef<HTMLDivElement>(null);
+  const backgroundRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const { data, error } = await supabase.from("profil").select("*").limit(1).maybeSingle()
+        const { data, error } = await supabase
+          .from('profil')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
 
-        if (error) throw error
-        setProfileData(data)
+        if (error) throw error;
+        setProfileData(data);
       } catch (error) {
-        console.error("Profil verisi çekilemedi:", error)
+        console.error('Profil verisi çekilemedi:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
+    };
+
+    fetchProfileData();
+  }, []);
+
+  // Apple-style GSAP animasyonları
+  useEffect(() => {
+    if (!loading && profileData) {
+      const ctx = gsap.context(() => {
+        // Apple'ın karakteristik giriş animasyonu
+        const masterTl = gsap.timeline();
+
+        // İlk yükleme animasyonu - Apple tarzı
+        gsap.set([titleRef.current, subtitleRef.current, descriptionRef.current, buttonsRef.current, socialRef.current], {
+          y: 60,
+          opacity: 0
+        });
+
+        gsap.set(imageRef.current, {
+          scale: 0.3,
+          opacity: 0,
+          rotationY: -30
+        });
+
+        gsap.set(codeEditorRef.current, {
+          x: 200,
+          opacity: 0,
+          rotationY: 15,
+          scale: 0.8
+        });
+
+        // Apple'ın signature easing curve'ü
+        const appleEase = "cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+
+        // Profil resmi - Apple tarzı büyüme efekti
+        masterTl.to(imageRef.current, {
+          scale: 1,
+          opacity: 1,
+          rotationY: 0,
+          duration: 1.4,
+          ease: "back.out(1.2)"
+        });
+
+        // Başlık - Apple'ın yumuşak slide up efekti
+        masterTl.to(titleRef.current, {
+          y: 0,
+          opacity: 1,
+          duration: 1.2,
+          ease: appleEase
+        }, "-=1");
+
+        // Alt başlık
+        masterTl.to(subtitleRef.current, {
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          ease: appleEase
+        }, "-=0.8");
+
+        // Açıklama
+        masterTl.to(descriptionRef.current, {
+          y: 0,
+          opacity: 1,
+          duration: 0.9,
+          ease: appleEase
+        }, "-=0.6");
+
+        // Butonlar - Apple'ın staggered animation
+        masterTl.to(buttonsRef.current, {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: appleEase
+        }, "-=0.4");
+
+        // Sosyal medya
+        masterTl.to(socialRef.current, {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          ease: appleEase
+        }, "-=0.2");
+
+        // Code Editor - Apple'ın 3D slide efekti
+        masterTl.to(codeEditorRef.current, {
+          x: 0,
+          opacity: 1,
+          rotationY: 0,
+          scale: 1,
+          duration: 1.5,
+          ease: "power3.out"
+        }, "-=1.2");
+
+        // Apple'ın signature zoom-out scroll efekti
+        ScrollTrigger.create({
+          trigger: heroRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 1, // Apple'ın ultra-smooth scrub
+          onUpdate: (self) => {
+            const progress = self.progress;
+            
+            // Apple'ın ana zoom-out efekti - tüm hero container
+            const zoomOutScale = 1 - progress * 0.3; // %30 küçülme
+            const zoomOutY = progress * -100; // Yukarı hareket
+            
+            gsap.to(heroRef.current, {
+              scale: zoomOutScale,
+              y: zoomOutY,
+              transformOrigin: "center center",
+              duration: 0.1,
+              ease: "none"
+            });
+
+            // Background - Apple'ın depth efekti
+            gsap.to(backgroundRef.current, {
+              scale: 1 + progress * 0.2, // Background büyür (depth illusion)
+              opacity: 1 - progress * 0.4,
+              duration: 0.1,
+              ease: "none"
+            });
+
+            // Profil resmi - Apple'ın 3D zoom efekti
+            gsap.to(imageRef.current, {
+              scale: 1 - progress * 0.4,
+              rotationY: progress * -15,
+              rotationX: progress * 5,
+              z: progress * -200,
+              duration: 0.1,
+              ease: "none"
+            });
+
+            // Başlık - Apple'ın typography zoom efekti
+            gsap.to(titleRef.current, {
+              scale: 1 - progress * 0.2,
+              y: progress * -80,
+              opacity: 1 - progress * 0.6,
+              rotationX: progress * 10,
+              duration: 0.1,
+              ease: "none"
+            });
+
+            // Alt başlık - staggered zoom
+            gsap.to(subtitleRef.current, {
+              scale: 1 - progress * 0.25,
+              y: progress * -60,
+              opacity: 1 - progress * 0.7,
+              rotationX: progress * 8,
+              duration: 0.1,
+              ease: "none"
+            });
+
+            // Açıklama - subtle zoom
+            gsap.to(descriptionRef.current, {
+              scale: 1 - progress * 0.15,
+              y: progress * -40,
+              opacity: 1 - progress * 0.8,
+              duration: 0.1,
+              ease: "none"
+            });
+
+            // Butonlar - Apple'ın interactive element zoom
+            gsap.to(buttonsRef.current, {
+              scale: 1 - progress * 0.3,
+              y: progress * -30,
+              opacity: 1 - progress * 0.9,
+              rotationX: progress * 15,
+              duration: 0.1,
+              ease: "none"
+            });
+
+            // Sosyal medya - micro zoom
+            gsap.to(socialRef.current, {
+              scale: 1 - progress * 0.2,
+              y: progress * -20,
+              opacity: 1 - progress * 0.95,
+              duration: 0.1,
+              ease: "none"
+            });
+
+            // Code Editor - Apple'ın dramatic 3D zoom
+            gsap.to(codeEditorRef.current, {
+              scale: 1 - progress * 0.5,
+              rotationY: progress * 25,
+              rotationX: progress * -10,
+              z: progress * -300,
+              y: progress * -100,
+              opacity: 1 - progress * 0.5,
+              duration: 0.1,
+              ease: "none"
+            });
+          }
+        });
+
+        // Apple'ın secondary scroll efekti - blur ve brightness
+        ScrollTrigger.create({
+          trigger: heroRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 1,
+          onUpdate: (self) => {
+            const progress = self.progress;
+            
+            // Apple'ın blur efekti
+            const blurAmount = progress * 8;
+            const brightness = 1 - progress * 0.3;
+            
+            gsap.to(heroRef.current, {
+              filter: `blur(${blurAmount}px) brightness(${brightness})`,
+              duration: 0.1,
+              ease: "none"
+            });
+          }
+        });
+
+        // Apple'ın hover mikrointeraksiyonları
+        if (imageRef.current) {
+          const img = imageRef.current;
+          
+          img.addEventListener('mouseenter', () => {
+            gsap.to(img, {
+              scale: 1.08,
+              rotationY: 5,
+              duration: 0.4,
+              ease: "power2.out"
+            });
+          });
+
+          img.addEventListener('mouseleave', () => {
+            gsap.to(img, {
+              scale: 1,
+              rotationY: 0,
+              duration: 0.4,
+              ease: "power2.out"
+            });
+          });
+        }
+
+        // Butonlar için Apple hover efekti
+        const buttons = buttonsRef.current?.querySelectorAll('a');
+        buttons?.forEach(button => {
+          button.addEventListener('mouseenter', () => {
+            gsap.to(button, {
+              scale: 1.05,
+              y: -2,
+              duration: 0.3,
+              ease: "power2.out"
+            });
+          });
+
+          button.addEventListener('mouseleave', () => {
+            gsap.to(button, {
+              scale: 1,
+              y: 0,
+              duration: 0.3,
+              ease: "power2.out"
+            });
+          });
+        });
+
+        // Sosyal medya ikonları için Apple hover
+        const socialIcons = socialRef.current?.querySelectorAll('a');
+        socialIcons?.forEach(icon => {
+          icon.addEventListener('mouseenter', () => {
+            gsap.to(icon, {
+              scale: 1.15,
+              rotationZ: 5,
+              duration: 0.3,
+              ease: "back.out(2)"
+            });
+          });
+
+          icon.addEventListener('mouseleave', () => {
+            gsap.to(icon, {
+              scale: 1,
+              rotationZ: 0,
+              duration: 0.3,
+              ease: "power2.out"
+            });
+          });
+        });
+
+        // Apple'ın mouse follow efekti
+        let mouseX = 0;
+        let mouseY = 0;
+
+        const handleMouseMove = (e: MouseEvent) => {
+          mouseX = (e.clientX - window.innerWidth / 2) * 0.01;
+          mouseY = (e.clientY - window.innerHeight / 2) * 0.01;
+
+          gsap.to(codeEditorRef.current, {
+            rotationY: mouseX,
+            rotationX: -mouseY,
+            duration: 0.5,
+            ease: "power2.out"
+          });
+
+          gsap.to(imageRef.current, {
+            rotationY: mouseX * 0.5,
+            rotationX: -mouseY * 0.5,
+            duration: 0.8,
+            ease: "power2.out"
+          });
+        };
+
+        heroRef.current?.addEventListener('mousemove', handleMouseMove);
+
+        // Cleanup
+        return () => {
+          heroRef.current?.removeEventListener('mousemove', handleMouseMove);
+        };
+
+      }, heroRef);
+
+      return () => ctx.revert();
     }
-
-    fetchProfileData()
-
-    // Show scroll indicator after 2 seconds
-    const timer = setTimeout(() => {
-      setShowScrollIndicator(true)
-    }, 2000)
-
-    // Hide scroll indicator on scroll
-    const handleScroll = () => {
-      if (window.scrollY > 100) {
-        setShowScrollIndicator(false)
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll)
-
-    return () => {
-      clearTimeout(timer)
-      window.removeEventListener("scroll", handleScroll)
-    }
-  }, [])
+  }, [loading, profileData]);
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Premium Multi-layer Background */}
-      <div className="absolute inset-0">
-        {/* Base gradient with animation */}
-        <motion.div
-          className="absolute inset-0"
-          animate={{
-            background: [
-              "linear-gradient(135deg, #f8fafc 0%, #e0f2fe 25%, #e0e7ff 50%, #f1f5f9 100%)",
-              "linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 25%, #e0f2fe 50%, #f8fafc 100%)",
-            ],
-          }}
-          transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-        />
-
-        {/* Dark mode gradient */}
-        <motion.div
-          className="absolute inset-0 dark:block hidden"
-          animate={{
-            background: [
-              "linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #312e81 50%, #1e293b 100%)",
-              "linear-gradient(135deg, #1e293b 0%, #312e81 25%, #1e293b 50%, #0f172a 100%)",
-            ],
-          }}
-          transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-        />
-
-        {/* Animated floating orbs */}
-        <motion.div className="absolute inset-0 opacity-40" style={{ y: y1 }}>
-          <motion.div
-            className="absolute top-20 left-1/4 w-96 h-96 rounded-full blur-3xl"
-            animate={{
-              background: [
-                "radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(147,51,234,0.2) 50%, transparent 100%)",
-                "radial-gradient(circle, rgba(147,51,234,0.3) 0%, rgba(6,182,212,0.2) 50%, transparent 100%)",
-                "radial-gradient(circle, rgba(6,182,212,0.3) 0%, rgba(59,130,246,0.2) 50%, transparent 100%)",
-              ],
-              scale: [1, 1.2, 1],
-              x: [0, 50, 0],
-              y: [0, -30, 0],
-            }}
-            transition={{ duration: 12, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute top-1/3 right-1/4 w-80 h-80 rounded-full blur-3xl"
-            animate={{
-              background: [
-                "radial-gradient(circle, rgba(147,51,234,0.3) 0%, rgba(236,72,153,0.2) 50%, transparent 100%)",
-                "radial-gradient(circle, rgba(236,72,153,0.3) 0%, rgba(59,130,246,0.2) 50%, transparent 100%)",
-                "radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(147,51,234,0.2) 50%, transparent 100%)",
-              ],
-              scale: [1, 1.3, 1],
-              x: [0, -40, 0],
-              y: [0, 40, 0],
-            }}
-            transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 2 }}
-          />
-          <motion.div
-            className="absolute bottom-1/4 left-1/3 w-72 h-72 rounded-full blur-3xl"
-            animate={{
-              background: [
-                "radial-gradient(circle, rgba(6,182,212,0.3) 0%, rgba(59,130,246,0.2) 50%, transparent 100%)",
-                "radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(147,51,234,0.2) 50%, transparent 100%)",
-                "radial-gradient(circle, rgba(147,51,234,0.3) 0%, rgba(6,182,212,0.2) 50%, transparent 100%)",
-              ],
-              scale: [1, 1.1, 1],
-              x: [0, 30, 0],
-              y: [0, -20, 0],
-            }}
-            transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 4 }}
-          />
-        </motion.div>
-
-        {/* Floating geometric patterns */}
-        <motion.div className="absolute inset-0 opacity-10 dark:opacity-20" style={{ y: y2 }}>
-          <motion.div
-            className="absolute top-20 left-20 w-32 h-32 border-2 border-blue-500/30 rounded-2xl"
-            animate={{
-              rotate: [0, 360],
-              scale: [1, 1.1, 1],
-            }}
-            transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          />
-          <motion.div
-            className="absolute top-40 right-32 w-24 h-24 border-2 border-purple-500/30 rounded-xl"
-            animate={{
-              rotate: [360, 0],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          />
-          <motion.div
-            className="absolute bottom-32 left-1/3 w-20 h-20 border-2 border-cyan-500/30 rounded-lg"
-            animate={{
-              rotate: [0, -360],
-              scale: [1, 1.15, 1],
-            }}
-            transition={{ duration: 18, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          />
-        </motion.div>
-
-        {/* Floating particles */}
-        <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-30"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -100, 0],
-                opacity: [0.3, 0.8, 0.3],
-                scale: [1, 1.5, 1],
-              }}
-              transition={{
-                duration: Math.random() * 10 + 10,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "easeInOut",
-                delay: Math.random() * 5,
-              }}
-            />
-          ))}
+    <section 
+      ref={heroRef}
+      className="relative min-h-screen flex items-center overflow-hidden will-change-transform"
+      style={{ 
+        perspective: '3000px',
+        transformStyle: 'preserve-3d',
+        transformOrigin: 'center center'
+      }}
+    >
+      {/* Apple-style Premium Background */}
+      <div 
+        ref={backgroundRef}
+        className="absolute inset-0"
+      >
+        {/* Apple'ın signature gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-[#f8f9fa] to-[#f1f3f4] dark:from-[#000000] dark:via-[#0a0a0a] dark:to-[#111111]"></div>
+        
+        {/* Apple'ın mesh gradient overlay */}
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-apple-blue/[0.03] via-transparent to-apple-purple/[0.03]"></div>
+          <div className="absolute top-1/4 right-0 w-96 h-96 bg-apple-blue/[0.02] rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-apple-purple/[0.02] rounded-full blur-3xl"></div>
         </div>
 
-        {/* Grid pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.15)_1px,transparent_0)]"
-          style={{ backgroundSize: "30px 30px" }}
-        />
+        {/* Apple'ın subtle noise texture */}
+        <div className="absolute inset-0 opacity-[0.015]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+        }}></div>
       </div>
 
-      <motion.div className="container-custom relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-screen py-20">
-          {/* Left Content - 7 columns */}
-          <div className="lg:col-span-7 space-y-8">
-            {/* Premium Status Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="relative inline-flex items-center gap-3 px-6 py-3 bg-white/10 dark:bg-gray-800/10 backdrop-blur-xl rounded-full border border-white/20 dark:border-gray-700/20 shadow-2xl"
-            >
-              {/* Animated background */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-green-400/20 via-blue-400/20 to-purple-400/20 rounded-full"
-                animate={{
-                  background: [
-                    "linear-gradient(45deg, rgba(34,197,94,0.2), rgba(59,130,246,0.2), rgba(147,51,234,0.2))",
-                    "linear-gradient(45deg, rgba(147,51,234,0.2), rgba(34,197,94,0.2), rgba(59,130,246,0.2))",
-                    "linear-gradient(45deg, rgba(59,130,246,0.2), rgba(147,51,234,0.2), rgba(34,197,94,0.2))",
-                  ],
-                }}
-                transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-              />
-
-              {/* Floating sparkles */}
-              <motion.div
-                className="absolute -top-1 -right-1 w-3 h-3"
-                animate={{
-                  scale: [0, 1, 0],
-                  rotate: [0, 180, 360],
-                }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-              >
-                <Sparkles className="w-3 h-3 text-yellow-400" />
-              </motion.div>
-
-              <motion.div
-                className="w-3 h-3 bg-green-500 rounded-full relative z-10"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  boxShadow: ["0 0 0 0 rgba(34, 197, 94, 0.7)", "0 0 0 10px rgba(34, 197, 94, 0)"],
-                }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-              />
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 relative z-10">
-                Yeni projeler için müsait
-              </span>
-            </motion.div>
-
-            {/* Premium Profile Image Section */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.2, ease: [0.25, 0.25, 0, 1] }}
-              className="relative w-32 h-32 mx-auto lg:mx-0 mb-8"
-            >
-              {/* Outer glow ring */}
-              <motion.div
-                className="absolute -inset-4 rounded-full opacity-60"
-                animate={{
-                  background: [
-                    "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6)",
-                    "conic-gradient(from 120deg, #8b5cf6, #06b6d4, #3b82f6, #8b5cf6)",
-                    "conic-gradient(from 240deg, #06b6d4, #3b82f6, #8b5cf6, #06b6d4)",
-                  ],
-                }}
-                transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-              />
-
-              {/* Middle glow ring */}
-              <motion.div
-                className="absolute -inset-2 rounded-full bg-gradient-to-r from-blue-400/30 via-purple-400/30 to-cyan-400/30 blur-md"
-                animate={{
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 180, 360],
-                }}
-                transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-              />
-
-              {/* Floating particles around image */}
-              <div className="absolute inset-0">
-                {[...Array(8)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"
-                    style={{
-                      left: `${50 + Math.cos((i * Math.PI * 2) / 8) * 60}%`,
-                      top: `${50 + Math.sin((i * Math.PI * 2) / 8) * 60}%`,
-                    }}
-                    animate={{
-                      scale: [0, 1, 0],
-                      opacity: [0, 0.8, 0],
-                      rotate: [0, 360],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Number.POSITIVE_INFINITY,
-                      delay: i * 0.2,
-                      ease: "easeInOut",
-                    }}
-                  />
-                ))}
+      <div className="container-custom relative z-10 will-change-transform" style={{ transformStyle: 'preserve-3d' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center min-h-screen py-24 will-change-transform" style={{ transformStyle: 'preserve-3d' }}>
+          
+          {/* Left Content - Apple'ın content hierarchy */}
+          <div className="lg:col-span-7 space-y-12">
+            
+            {/* Apple-style Status Badge */}
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-apple-green/8 text-apple-green rounded-full border border-apple-green/15 backdrop-blur-xl shadow-sm">
+              <div className="relative">
+                <div className="w-2.5 h-2.5 bg-apple-green rounded-full"></div>
+                <div className="absolute inset-0 w-2.5 h-2.5 bg-apple-green rounded-full animate-ping opacity-75"></div>
               </div>
+              <span className="text-sm font-medium tracking-wide">Yeni projeler için müsait</span>
+            </div>
 
-              {/* Main image container */}
-              <motion.div
-                className="relative w-32 h-32 rounded-full overflow-hidden backdrop-blur-xl bg-white/10 dark:bg-gray-800/10 border border-white/20 dark:border-gray-700/20 shadow-2xl group cursor-pointer"
-                whileHover={{
-                  scale: 1.05,
-                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)",
-                }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                {/* Shimmer overlay */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 opacity-0 group-hover:opacity-100"
-                  animate={{
-                    x: ["-100%", "100%"],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Number.POSITIVE_INFINITY,
-                    repeatDelay: 3,
-                    ease: "easeInOut",
-                  }}
-                />
-
-                {/* Profile Image */}
-                {loading ? (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 animate-pulse" />
-                ) : (
-                  <>
-                    {profileData?.resim_url ? (
-                      <motion.img
-                        src={profileData.resim_url}
-                        alt={profileData.isim}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-500/20 dark:from-blue-600/20 dark:to-purple-600/20">
-                        <motion.div
-                          className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 text-transparent bg-clip-text"
-                          animate={{
-                            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                          }}
-                          transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                          style={{ backgroundSize: "200% 200%" }}
-                        >
-                          HA
-                        </motion.div>
-                      </div>
-                    )}
-
-                    {/* Inner glow overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  </>
-                )}
-
-                {/* Status indicator */}
-                <motion.div
-                  className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-white dark:border-gray-800 shadow-lg flex items-center justify-center"
-                  animate={{
-                    scale: [1, 1.1, 1],
-                    boxShadow: ["0 0 0 0 rgba(34, 197, 94, 0.7)", "0 0 0 8px rgba(34, 197, 94, 0)"],
-                  }}
-                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                >
-                  <motion.div
-                    className="w-2 h-2 bg-white rounded-full"
-                    animate={{ opacity: [1, 0.5, 1] }}
-                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                  />
-                </motion.div>
-              </motion.div>
-
-              {/* Floating sparkles */}
-              <motion.div
-                className="absolute -top-2 -right-2 w-4 h-4"
-                animate={{
-                  rotate: [0, 360],
-                  scale: [1, 1.2, 1],
-                }}
-                transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-              >
-                <Sparkles className="w-4 h-4 text-yellow-400 opacity-80" />
-              </motion.div>
-
-              <motion.div
-                className="absolute -bottom-2 -left-2 w-3 h-3"
-                animate={{
-                  rotate: [360, 0],
-                  scale: [1, 1.3, 1],
-                }}
-                transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 1 }}
-              >
-                <Sparkles className="w-3 h-3 text-blue-400 opacity-60" />
-              </motion.div>
-            </motion.div>
-
-            {/* Enhanced Main Heading */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="space-y-6"
+            {/* Apple-style Profile Image */}
+            <div 
+              ref={imageRef}
+              className="relative w-44 h-44 mx-auto lg:mx-0 cursor-pointer group will-change-transform"
+              style={{ transformStyle: 'preserve-3d' }}
             >
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
-                <motion.span
-                  className="block text-gray-900 dark:text-white relative"
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                >
-                  {loading ? "Hekimcan AKTAŞ" : profileData?.isim || "Hekimcan AKTAŞ"}
-
-                  {/* Floating sparkles around name */}
-                  <motion.div
-                    className="absolute -top-4 -right-4 w-6 h-6"
-                    animate={{
-                      rotate: [0, 360],
-                      scale: [1, 1.2, 1],
-                    }}
-                    transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-                  >
-                    <Sparkles className="w-6 h-6 text-yellow-400 opacity-60" />
-                  </motion.div>
-                </motion.span>
-
-                <motion.span
-                  className="block relative"
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                >
-                  {/* Animated gradient text */}
-                  <motion.span
-                    className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 dark:from-blue-400 dark:via-purple-400 dark:to-cyan-400 text-transparent bg-clip-text"
-                    animate={{
-                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                    }}
-                    transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                    style={{ backgroundSize: "200% 200%" }}
-                  >
-                    {loading ? "Yazılım Geliştirici" : profileData?.unvan || "Yazılım Geliştirici"}
-                  </motion.span>
-
-                  {/* Shimmer effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                    animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear", delay: 1 }}
+              {/* Apple'ın signature glow */}
+              <div className="absolute -inset-6 bg-gradient-to-r from-apple-blue/10 via-apple-purple/10 to-apple-blue/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              
+              <div className="relative w-44 h-44 rounded-full overflow-hidden shadow-2xl border border-white/20 dark:border-apple-gray-700/30 backdrop-blur-xl bg-white/5 dark:bg-apple-gray-800/5">
+                {loading ? (
+                  <div className="w-full h-full bg-gradient-to-br from-apple-gray-100 to-apple-gray-200 dark:from-apple-gray-800 dark:to-apple-gray-700 animate-pulse"></div>
+                ) : profileData?.resim_url ? (
+                  <img
+                    src={profileData.resim_url}
+                    alt={profileData.isim}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                </motion.span>
-              </h1>
-            </motion.div>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-apple-blue via-apple-purple to-apple-blue flex items-center justify-center">
+                    <span className="text-5xl font-light text-white tracking-wider">
+                      {profileData?.isim?.charAt(0) || 'H'}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Apple'ın glassmorphism overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              </div>
+              
+              {/* Apple-style status indicator */}
+              <div className="absolute -bottom-3 -right-3 w-9 h-9 bg-apple-green rounded-full border-3 border-white dark:border-apple-gray-900 shadow-lg flex items-center justify-center">
+                <div className="w-3.5 h-3.5 bg-white rounded-full animate-pulse"></div>
+              </div>
+            </div>
 
-            {/* Enhanced Description */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl relative"
+            {/* Apple-style Typography Hierarchy */}
+            <div className="space-y-8">
+              <h1 
+                ref={titleRef}
+                className="text-7xl md:text-8xl lg:text-9xl font-light text-apple-gray-900 dark:text-white tracking-tighter leading-[0.85] font-system will-change-transform"
+                style={{ 
+                  fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
+                  letterSpacing: '-0.02em',
+                  transformStyle: 'preserve-3d'
+                }}
+              >
+                {loading ? 'Hekimcan AKTAŞ' : profileData?.isim || 'Hekimcan AKTAŞ'}
+              </h1>
+              
+              <p 
+                ref={subtitleRef}
+                className="text-4xl md:text-5xl text-apple-blue font-light tracking-tight leading-tight will-change-transform"
+                style={{ 
+                  letterSpacing: '-0.01em',
+                  transformStyle: 'preserve-3d'
+                }}
+              >
+                {loading ? 'Yazılım Geliştirici' : profileData?.unvan || 'Yazılım Geliştirici'}
+              </p>
+            </div>
+
+            {/* Apple-style Description */}
+            <p
+              ref={descriptionRef}
+              className="text-2xl md:text-3xl text-apple-gray-600 dark:text-apple-gray-300 leading-relaxed max-w-3xl font-light tracking-wide will-change-transform"
+              style={{ 
+                lineHeight: '1.4',
+                letterSpacing: '0.01em',
+                transformStyle: 'preserve-3d'
+              }}
             >
               {loading
-                ? "Modern web teknolojileri ile yenilikçi çözümler geliştiriyorum."
+                ? 'Modern web teknolojileri ile yenilikçi çözümler geliştiriyorum.'
                 : profileData?.slogan ||
-                  "Modern web teknolojileri ile yenilikçi çözümler geliştiriyorum. Kullanıcı deneyimini ön planda tutan, performanslı ve güvenli yazılımlar oluşturuyorum."}
+                  'Modern web teknolojileri ile yenilikçi çözümler geliştiriyorum. Kullanıcı deneyimini ön planda tutan, performanslı ve güvenli yazılımlar oluşturuyorum.'}
+            </p>
 
-              {/* Floating accent */}
-              <motion.div
-                className="absolute -right-8 top-0 w-4 h-4 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-40"
-                animate={{
-                  y: [0, -10, 0],
-                  scale: [1, 1.2, 1],
-                }}
-                transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-              />
-            </motion.p>
-
-            {/* Premium CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="flex flex-col sm:flex-row gap-6"
+            {/* Apple-style CTA Buttons */}
+            <div 
+              ref={buttonsRef}
+              className="flex flex-col sm:flex-row gap-6 pt-4 will-change-transform"
+              style={{ transformStyle: 'preserve-3d' }}
             >
-              <MouseFollowButton
+              <Link
                 to="/projeler"
-                className="group relative inline-flex items-center justify-center px-10 py-5 text-white font-bold rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-105"
+                className="group relative inline-flex items-center gap-4 px-10 py-5 bg-apple-blue text-white rounded-2xl font-medium text-xl shadow-2xl hover:shadow-apple-blue/25 backdrop-blur-xl border border-apple-blue/20 overflow-hidden transition-all duration-500"
               >
-                <span className="relative z-10 flex items-center gap-3 text-lg">
-                  Projelerimi Keşfet
-                  <motion.div whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
-                    <ArrowRight className="w-6 h-6" />
-                  </motion.div>
-                </span>
-              </MouseFollowButton>
-
-              <MouseFollowButton
+                <span className="relative z-10">Projelerimi Keşfet</span>
+                <ArrowRight size={22} className="relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
+                
+                {/* Apple'ın button shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              </Link>
+              
+              <Link
                 to="/iletisim"
-                className="group relative inline-flex items-center justify-center px-10 py-5 bg-white/10 dark:bg-gray-800/10 backdrop-blur-xl text-gray-900 dark:text-white font-bold rounded-2xl border border-white/20 dark:border-gray-700/20 shadow-2xl transition-all duration-300"
+                className="group inline-flex items-center gap-4 px-10 py-5 bg-white/60 dark:bg-apple-gray-800/60 text-apple-gray-900 dark:text-white rounded-2xl font-medium text-xl shadow-xl hover:shadow-2xl backdrop-blur-xl border border-apple-gray-200/30 dark:border-apple-gray-700/30 transition-all duration-500"
               >
-                <span className="relative z-10 flex items-center gap-3 text-lg">
-                  <Play className="w-6 h-6" />
-                  İletişime Geç
-                </span>
-              </MouseFollowButton>
-            </motion.div>
+                <span>İletişime Geç</span>
+              </Link>
+            </div>
 
-            {/* Premium Social Links */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.2 }}
-              className="flex items-center gap-6 pt-6"
+            {/* Apple-style Social Links */}
+            <div 
+              ref={socialRef}
+              className="flex items-center gap-6 pt-8 will-change-transform"
+              style={{ transformStyle: 'preserve-3d' }}
             >
-              <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Takip edin:</span>
+              <span className="text-lg text-apple-gray-500 dark:text-apple-gray-400 font-light">Takip edin</span>
               <div className="flex items-center gap-4">
                 {profileData?.github_url && (
-                  <MouseFollowSocialLink
+                  <a
                     href={profileData.github_url}
-                    icon={<Github size={24} />}
-                    label="GitHub"
-                    color="from-gray-700 to-gray-900"
-                  />
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-4 rounded-2xl text-apple-gray-600 dark:text-apple-gray-400 hover:text-apple-blue hover:bg-apple-gray-100/50 dark:hover:bg-apple-gray-800/50 backdrop-blur-xl transition-all duration-300"
+                    aria-label="GitHub"
+                  >
+                    <Github size={28} />
+                  </a>
                 )}
                 {profileData?.linkedin_url && (
-                  <MouseFollowSocialLink
+                  <a
                     href={profileData.linkedin_url}
-                    icon={<Linkedin size={24} />}
-                    label="LinkedIn"
-                    color="from-blue-600 to-blue-800"
-                  />
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-4 rounded-2xl text-apple-gray-600 dark:text-apple-gray-400 hover:text-apple-blue hover:bg-apple-gray-100/50 dark:hover:bg-apple-gray-800/50 backdrop-blur-xl transition-all duration-300"
+                    aria-label="LinkedIn"
+                  >
+                    <Linkedin size={28} />
+                  </a>
                 )}
                 {profileData?.twitter_url && (
-                  <MouseFollowSocialLink
+                  <a
                     href={profileData.twitter_url}
-                    icon={<Twitter size={24} />}
-                    label="Twitter"
-                    color="from-sky-400 to-sky-600"
-                  />
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-4 rounded-2xl text-apple-gray-600 dark:text-apple-gray-400 hover:text-apple-blue hover:bg-apple-gray-100/50 dark:hover:bg-apple-gray-800/50 backdrop-blur-xl transition-all duration-300"
+                    aria-label="Twitter"
+                  >
+                    <Twitter size={28} />
+                  </a>
                 )}
               </div>
-            </motion.div>
+            </div>
           </div>
 
-          {/* Right Content - 5 columns - Code Editor stays the same */}
+          {/* Right Content - Apple-style Code Editor */}
           <div className="lg:col-span-5">
-            <motion.div
-              initial={{ opacity: 0, x: 50, rotateY: -15 }}
-              animate={{ opacity: 1, x: 0, rotateY: 0 }}
-              transition={{ duration: 1, delay: 0.3 }}
-              className="relative"
+            <div 
+              ref={codeEditorRef}
+              className="relative will-change-transform"
+              style={{ 
+                transformStyle: 'preserve-3d',
+                transform: 'rotateY(-5deg) rotateX(2deg)'
+              }}
             >
               <CodeEditor />
-            </motion.div>
+            </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Premium Mouse Scroll Indicator */}
-      {showScrollIndicator && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2"
-        >
-          {/* Floating particles around indicator */}
-          <div className="relative">
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-blue-400 rounded-full"
-                style={{
-                  left: `${Math.cos((i * Math.PI * 2) / 6) * 20 + 10}px`,
-                  top: `${Math.sin((i * Math.PI * 2) / 6) * 20 + 10}px`,
-                }}
-                animate={{
-                  scale: [0, 1, 0],
-                  opacity: [0, 1, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Number.POSITIVE_INFINITY,
-                  delay: i * 0.2,
-                  ease: "easeInOut",
-                }}
-              />
-            ))}
-
-            {/* Mouse icon */}
-            <motion.div
-              className="w-8 h-12 border-2 border-gray-400 dark:border-gray-600 rounded-full flex justify-center relative bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm"
-              animate={{
-                y: [0, 5, 0],
-                boxShadow: ["0 0 0 0 rgba(59, 130, 246, 0.4)", "0 0 0 10px rgba(59, 130, 246, 0)"],
-              }}
-              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-            >
-              <motion.div
-                className="w-1 h-3 bg-gradient-to-b from-blue-400 to-purple-400 rounded-full mt-2"
-                animate={{ y: [0, 8, 0] }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-              />
-            </motion.div>
-          </div>
-
-          {/* Chevron arrow */}
+      {/* Apple-style Scroll Indicator */}
+      <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-3">
+        <div className="w-7 h-12 border-2 border-apple-gray-300 dark:border-apple-gray-600 rounded-full flex justify-center backdrop-blur-sm bg-white/10 dark:bg-apple-gray-900/10">
           <motion.div
-            animate={{ y: [0, 5, 0] }}
-            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-          >
-            <ChevronDown className="w-6 h-6 text-gray-400 dark:text-gray-600" />
-          </motion.div>
-        </motion.div>
-      )}
+            className="w-1.5 h-4 bg-apple-gray-400 dark:bg-apple-gray-500 rounded-full mt-2"
+            animate={{ y: [0, 12, 0] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
+        <ChevronDown className="w-6 h-6 text-apple-gray-300 dark:text-apple-gray-600" />
+      </div>
     </section>
-  )
-}
+  );
+};
 
 export default HeroSection
