@@ -1,3 +1,6 @@
+/* Apple System Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,117 +8,718 @@
 @layer base {
   html {
     @apply scroll-smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  
+
   body {
-    @apply font-sans text-gray-800 bg-gray-50 transition-colors duration-200 ease-in-out;
+    @apply font-sans text-apple-gray-900 bg-white transition-colors duration-300 ease-in-out;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
   }
-  
+
   .dark body {
-    @apply text-gray-200 bg-gray-900;
+    @apply text-apple-gray-50 bg-apple-gray-900;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-bold;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-semibold tracking-tight;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  /* Apple System Font */
+  .font-system {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'ss01' 1, 'ss02' 1;
+  }
+
+  /* Apple-style smooth scrolling optimizations */
+  .will-change-transform {
+    will-change: transform, opacity, filter;
+  }
+
+  /* Hardware acceleration for smooth Apple-like animations */
+  * {
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    -o-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* Apple-style sticky sections */
+  .sticky-section {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    will-change: transform, opacity;
+  }
+
+  /* Apple-style smooth transitions */
+  .apple-transition {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Apple-style backdrop blur optimization */
+  .backdrop-blur-apple {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  /* Apple-style selection */
+  ::selection {
+    @apply bg-apple-blue/20 text-apple-gray-900;
+  }
+
+  .dark ::selection {
+    @apply bg-apple-blue/30 text-apple-gray-50;
   }
 }
 
 @layer components {
+
+  /* Apple-style buttons */
   .btn {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-apple font-medium transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
+    font-feature-settings: 'kern' 1;
   }
-  
+
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 dark:shadow-primary-800/30 dark:hover:shadow-primary-800/40;
+    @apply btn bg-apple-blue text-white hover:bg-apple-blue-dark focus:ring-4 focus:ring-apple-blue/30 shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] active:scale-[0.98];
   }
-  
+
   .btn-secondary {
-    @apply btn bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500 shadow-lg shadow-secondary-500/20 hover:shadow-secondary-500/30 dark:shadow-secondary-800/30 dark:hover:shadow-secondary-800/40;
+    @apply btn bg-apple-gray-100 text-apple-gray-900 hover:bg-apple-gray-200 focus:ring-4 focus:ring-apple-gray-300/50 shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] active:scale-[0.98] dark:bg-apple-gray-800 dark:text-apple-gray-100 dark:hover:bg-apple-gray-700;
   }
-  
+
   .btn-outline {
-    @apply btn border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:border-gray-500 shadow-lg shadow-gray-500/10 hover:shadow-gray-500/20 dark:shadow-gray-800/30 dark:hover:shadow-gray-800/40;
+    @apply btn border border-apple-gray-300 text-apple-gray-700 hover:bg-apple-gray-50 hover:border-apple-gray-400 focus:ring-4 focus:ring-apple-gray-300/30 shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] active:scale-[0.98] dark:border-apple-gray-600 dark:text-apple-gray-300 dark:hover:bg-apple-gray-800 dark:hover:border-apple-gray-500;
   }
-  
+
+  .btn-ghost {
+    @apply btn text-apple-gray-700 hover:bg-apple-gray-100 focus:ring-4 focus:ring-apple-gray-300/30 transform hover:scale-[1.02] active:scale-[0.98] dark:text-apple-gray-300 dark:hover:bg-apple-gray-800;
+  }
+
+  /* Apple-style containers */
   .container-custom {
     @apply container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
   }
-  
+
+  /* Apple-style cards */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-200;
-  }
-  
-  .form-input {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200;
-  }
-  
-  .form-label {
-    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
+    @apply bg-white/80 dark:bg-apple-gray-800/80 rounded-apple-lg shadow-apple backdrop-blur-xl border border-apple-gray-200/50 dark:border-apple-gray-700/50 overflow-hidden transition-all duration-300 hover:shadow-apple-lg;
   }
 
-  /* Toast Animations */
+  .card-glass {
+    @apply bg-white/10 dark:bg-apple-gray-900/10 rounded-apple-lg shadow-glass backdrop-blur-xl border border-white/20 dark:border-apple-gray-700/20 overflow-hidden transition-all duration-300 hover:bg-white/20 dark:hover:bg-apple-gray-900/20;
+  }
+
+  /* Apple-style forms */
+  .form-input {
+    @apply w-full px-4 py-3 border border-apple-gray-300 rounded-apple shadow-sm focus:outline-none focus:ring-4 focus:ring-apple-blue/30 focus:border-apple-blue dark:bg-apple-gray-800 dark:border-apple-gray-600 dark:text-white transition-all duration-300 placeholder:text-apple-gray-500;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-apple-gray-700 dark:text-apple-gray-300 mb-2;
+  }
+
+  /* Apple-style navigation */
+  .nav-glass {
+    @apply bg-white/80 dark:bg-apple-gray-900/80 backdrop-blur-xl border-b border-apple-gray-200/50 dark:border-apple-gray-700/50;
+  }
+
+  /* Apple-style sections */
+  .section-hero {
+    @apply bg-gradient-to-br from-white via-apple-gray-50 to-apple-gray-100 dark:from-apple-gray-900 dark:via-apple-gray-800 dark:to-apple-gray-700;
+  }
+
+  .section-glass {
+    @apply bg-gradient-to-br from-white/50 via-apple-gray-50/50 to-apple-gray-100/50 dark:from-apple-gray-900/50 dark:via-apple-gray-800/50 dark:to-apple-gray-700/50 backdrop-blur-xl;
+  }
+
+  /* Apple-style toast animations */
   @keyframes toast-enter {
     from {
       opacity: 0;
-      transform: translateX(20px);
+      transform: translateX(20px) scale(0.95);
     }
+
     to {
       opacity: 1;
-      transform: translateX(0);
+      transform: translateX(0) scale(1);
     }
   }
 
   @keyframes toast-exit {
     from {
       opacity: 1;
-      transform: translateX(0);
+      transform: translateX(0) scale(1);
     }
+
     to {
       opacity: 0;
-      transform: translateX(20px);
+      transform: translateX(20px) scale(0.95);
     }
   }
 
   .toast-enter {
-    animation: toast-enter 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+    animation: toast-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .toast-exit {
-    animation: toast-exit 0.4s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+    animation: toast-exit 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
   }
 }
 
-/* Özel Arkaplan Desenleri */
+/* Apple-style background patterns */
 .bg-grid-pattern {
-  background-image: linear-gradient(to right, rgba(128, 128, 128, 0.1) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(128, 128, 128, 0.1) 1px, transparent 1px);
+  background-image: linear-gradient(to right, rgba(156, 163, 175, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(156, 163, 175, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-dot-pattern {
+  background-image: radial-gradient(circle, rgba(156, 163, 175, 0.15) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
-/* Animasyonlar */
+/* Apple-style animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes pulse-subtle {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 4s ease-in-out infinite;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
 }
 
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
 
-.fade-in {
-  animation: fadeIn 0.5s ease-in-out;
+/* Apple-style glassmorphism */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.slide-up {
-  animation: slideUp 0.5s ease-in-out;
+.dark .glass-effect {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Apple-style scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.7);
+}
+
+/* Apple'ın Reveal by Scroll animasyonu için özel stiller */
+.apple-reveal-text {
+  font-size: clamp(1.25rem, 2.5vw, 2rem);
+  line-height: 1.4;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  will-change: transform, opacity, filter;
+}
+
+.apple-reveal-text .word {
+  display: inline-block;
+  opacity: 0.12;
+  transform: translateY(30px);
+  filter: blur(1px);
+  transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity, filter;
+}
+
+.apple-reveal-text .word.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0px);
+}
+
+/* Apple'ın signature easing curve */
+.apple-ease {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Apple'ın slow-in fast-out easing */
+.apple-ease-slow {
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Hardware acceleration optimization for Apple animations */
+.apple-reveal-text,
+.apple-reveal-text .word {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  -o-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+/* A
+pple Education Page Özel Stilleri */
+
+/* Apple'ın SF Pro Display font ailesi */
+.apple-font-display {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'ss01' 1, 'ss02' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Apple'ın signature letter-spacing değerleri */
+.apple-tracking-tight {
+  letter-spacing: -0.03em;
+}
+
+.apple-tracking-normal {
+  letter-spacing: -0.02em;
+}
+
+.apple-tracking-wide {
+  letter-spacing: 0.02em;
+}
+
+/* Apple'ın sticky section animasyonları */
+.apple-sticky-section {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  will-change: background-color, transform, opacity;
+  transition: background-color 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Apple'ın crossfade animasyonu */
+.apple-crossfade {
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+/* Apple'ın parallax zoom efekti */
+.apple-parallax-zoom {
+  transition: transform 1.4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+}
+
+/* Apple'ın word-by-word reveal animasyonu */
+.apple-word-reveal {
+  display: inline-block;
+  opacity: 0.1;
+  transform: translateY(40px);
+  filter: blur(1px);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
+}
+
+.apple-word-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* Apple'ın stagger animasyonu */
+.apple-stagger-item {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.apple-stagger-item.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Apple'ın hover scale efekti */
+.apple-hover-scale {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, box-shadow;
+}
+
+.apple-hover-scale:hover {
+  transform: scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Apple'ın CTA button animasyonu */
+.apple-cta-button {
+  background-color: #0071E3;
+  color: white;
+  border-radius: 50px;
+  padding: 16px 32px;
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, box-shadow, background-color;
+  box-shadow: 0 4px 20px rgba(0, 113, 227, 0.3);
+}
+
+.apple-cta-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 30px rgba(0, 113, 227, 0.4);
+  background-color: #0077ED;
+}
+
+.apple-cta-button:active {
+  transform: scale(0.98);
+}
+
+/* Apple'ın gradient background geçişleri */
+.apple-bg-transition {
+  transition: background-color 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: background-color;
+}
+
+/* Apple'ın signature gradient'leri */
+.apple-gradient-light {
+  background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 100%);
+}
+
+.apple-gradient-blue {
+  background: linear-gradient(135deg, #0071E3 0%, #005BB5 100%);
+}
+
+.apple-gradient-dark {
+  background: linear-gradient(135deg, #1d1d1f 0%, #000000 100%);
+}
+
+/* Apple'ın text size hierarchy */
+.apple-text-hero {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.apple-text-large {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.apple-text-medium {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  font-weight: 300;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+/* Apple'ın progress indicator */
+.apple-progress-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #d1d5db;
+  transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: background-color, transform, box-shadow;
+}
+
+.apple-progress-dot.active {
+  background-color: #0071E3;
+  transform: scale(1.25);
+  box-shadow: 0 0 20px rgba(0, 113, 227, 0.5);
+}
+
+/* Apple'ın card hover efekti */
+.apple-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 32px;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, box-shadow, background-color;
+}
+
+.apple-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* Apple'ın smooth scroll optimization */
+.apple-smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Apple'ın momentum scrolling */
+.apple-momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Apple'ın section padding */
+.apple-section-padding {
+  padding: clamp(4rem, 8vw, 8rem) 0;
+}
+
+/* Apple'ın container max-width */
+.apple-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+}
+
+/* Apple'ın responsive typography */
+@media (max-width: 768px) {
+  .apple-text-hero {
+    font-size: clamp(2.5rem, 10vw, 4rem);
+  }
+
+  .apple-text-large {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  .apple-text-medium {
+    font-size: clamp(1.125rem, 5vw, 1.5rem);
+  }
+}
+
+/* Apple'ın focus states */
+.apple-focus:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.3);
+}
+
+/* Apple'ın loading states */
+.apple-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: apple-loading 1.5s infinite;
+}
+
+@keyframes apple-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Apple'ın reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+  .apple-word-reveal,
+  .apple-crossfade,
+  .apple-parallax-zoom,
+  .apple-stagger-item,
+  .apple-hover-scale,
+  .apple-cta-button,
+  .apple-bg-transition,
+  .apple-progress-dot,
+  .apple-card {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Apple'ın high contrast support */
+@media (prefers-contrast: high) {
+  .apple-cta-button {
+    background-color: #000000;
+    border: 2px solid #ffffff;
+  }
+
+  .apple-progress-dot.active {
+    background-color: #000000;
+    border: 2px solid #ffffff;
+  }
+}
+
+/* Apple'ın "Reveal by Scroll" Özel Stilleri */
+
+/* Apple'ın Sequential Text Fade için ana container - Birebir Apple spesifikasyonu */
+.apple-reveal-text {
+  font-size: clamp(1.5rem, 3.5vw, 3rem);
+  line-height: 1.3;
+  font-weight: 400;
+  color: #000;
+  letter-spacing: -0.01em;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Apple'ın kelime bazlı reveal için word span'ları - Birebir Apple spesifikasyonu */
+.apple-reveal-text .word {
+  display: inline-block;
+  opacity: 0.1;
+  transform: translateY(30px);
+}
+
+/* Apple'ın revealed state */
+.apple-reveal-text .word.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0px);
+}
+
+/* Apple'ın responsive typography scaling - Birebir Apple spesifikasyonu */
+@media (max-width: 1024px) {
+  .apple-reveal-text {
+    font-size: clamp(1.25rem, 4vw, 2.5rem);
+    line-height: 1.4;
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .apple-reveal-text {
+    font-size: clamp(1.125rem, 4.5vw, 2rem);
+    line-height: 1.5;
+    padding: 0 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .apple-reveal-text {
+    font-size: clamp(1rem, 5vw, 1.5rem);
+    line-height: 1.6;
+    padding: 0 2rem;
+  }
+}
+
+/* Apple'ın performance optimization */
+.apple-reveal-text,
+.apple-reveal-text .word {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+/* Apple'ın reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .apple-reveal-text .word {
+    transition: none;
+    animation: none;
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+/* Apple'ın high contrast support */
+@media (prefers-contrast: high) {
+  .apple-reveal-text {
+    color: #000000;
+  }
+
+  .apple-reveal-text .word {
+    opacity: 0.3;
+  }
+
+  .apple-reveal-text .word.revealed {
+    opacity: 1;
+  }
 }
