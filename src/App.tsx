@@ -9,7 +9,7 @@ import EducationPage from './pages/EducationPage';
 import ContactPage from './pages/ContactPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminLayout from './components/layouts/AdminLayout';
-import AdminLogin from './pages/admin/AdminLogin';
+import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProjects from './pages/admin/AdminProjects';
 import AdminSkills from './pages/admin/AdminSkills';
@@ -41,9 +41,10 @@ function App() {
           <Route path="iletisim" element={<ContactPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
-        
+
         {/* Admin Routes */}
-        <Route path="/admin/giris" element={<AdminLogin />} />
+        <Route path="/admin/giris" element={<AdminLoginPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={
           <ProtectedRoute>
             <AdminLayout />
