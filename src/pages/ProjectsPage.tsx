@@ -18,6 +18,7 @@ const ProjectsPage = () => {
   const [projects, setProjects] = useState<Proje[]>([])
   const [loading, setLoading] = useState(true)
   const [currentProject, setCurrentProject] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
 
   // GSAP refs - FeaturedProjects'teki gibi
   const sectionRef = useRef<HTMLElement>(null)
@@ -46,6 +47,18 @@ const ProjectsPage = () => {
     }
 
     fetchProjects()
+  }, [])
+
+  // Responsive breakpoint kontrolü
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
   // Apple-style sticky stepper animasyonları - FeaturedProjects'ten birebir
@@ -253,7 +266,8 @@ const ProjectsPage = () => {
           className="sticky top-0 h-screen bg-white dark:bg-apple-gray-900 overflow-hidden"
         >
 
-          {/* Apple-style Step Indicator - Sağ Taraf */}
+          {/* Apple-style Step Indicator - Desktop: Sağ Taraf, Mobile: Üst */}
+          {/* Desktop Step Indicator */}
           <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-30 hidden lg:block">
             <div ref={stepIndicatorRef} className="flex flex-col gap-6">
               {projects.map((_, index) => (
@@ -284,13 +298,43 @@ const ProjectsPage = () => {
             </div>
           </div>
 
+          {/* Mobile Step Indicator - Üst kısımda yatay */}
+          <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-30 lg:hidden">
+            <div className="flex items-center gap-4 px-6 py-3 bg-white/90 dark:bg-apple-gray-800/90 rounded-full backdrop-blur-xl border border-apple-gray-200/50 dark:border-apple-gray-700/50 shadow-apple mobile-step-indicator mobile-dark-optimized ios-optimized">
+              {projects.map((_, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const targetScroll = index * window.innerHeight
+                      window.scrollTo({
+                        top: targetScroll,
+                        behavior: 'smooth'
+                      })
+                    }}
+                    className={`w-3 h-3 rounded-full transition-all duration-500 ${currentProject === index
+                      ? 'bg-apple-blue scale-125 shadow-lg shadow-apple-blue/50'
+                      : 'bg-apple-gray-300 dark:bg-apple-gray-600'
+                      }`}
+                  />
+                  {/* Mobile Step Line */}
+                  {index < projects.length - 1 && (
+                    <div className="w-8 h-px bg-apple-gray-200 dark:bg-apple-gray-700"></div>
+                  )}
+                </div>
+              ))}
+              <div className="ml-2 text-sm font-medium text-apple-gray-600 dark:text-apple-gray-400">
+                {currentProject + 1}/{projects.length}
+              </div>
+            </div>
+          </div>
+
           {/* Apple-style Main Content Area - Sabit */}
           <div className="absolute inset-0 flex items-center">
-            <div className="container-custom">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[60vh]">
+            <div className="container-custom mobile-safe-area">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-16 items-center min-h-[60vh] px-4 lg:px-0">
 
                 {/* Sol Taraf - Apple Typography */}
-                <div className="relative min-h-[600px] flex flex-col justify-center">
+                <div className="relative min-h-[300px] sm:min-h-[350px] md:min-h-[400px] lg:min-h-[600px] flex flex-col justify-center order-2 lg:order-1">
                   {projects[currentProject] && (
                     <div
                       ref={(el) => (contentRefs.current[currentProject] = el)}
@@ -298,7 +342,7 @@ const ProjectsPage = () => {
                     >
                       {/* Apple-style Project Number */}
                       <div className="relative">
-                        <div className="text-[200px] md:text-[250px] lg:text-[300px] font-extralight text-apple-gray-50 dark:text-apple-gray-900 leading-none select-none absolute -top-20 -left-8 z-0">
+                        <div className="text-[120px] md:text-[200px] lg:text-[300px] font-extralight text-apple-gray-50 dark:text-apple-gray-900 leading-none select-none absolute -top-12 md:-top-20 -left-4 md:-left-8 z-0">
                           0{currentProject + 1}
                         </div>
                         <div className="relative z-10">
@@ -309,75 +353,86 @@ const ProjectsPage = () => {
                       </div>
 
                       {/* Apple-style Project Title */}
-                      <div className="space-y-6">
+                      <div className="space-y-3 md:space-y-4 lg:space-y-6">
                         <h3
-                          className="text-5xl md:text-6xl lg:text-7xl font-light text-apple-gray-900 dark:text-white leading-[0.9] tracking-tight font-system"
+                          className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-light text-apple-gray-900 dark:text-white leading-[0.9] tracking-tight font-system break-words mobile-project-title tablet-project-title desktop-project-title high-dpi-text"
                           style={{
                             fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
                             letterSpacing: '-0.02em'
                           }}
                         >
-                          {projects[currentProject].baslik.length > 40
-                            ? `${projects[currentProject].baslik.substring(0, 40)}...`
-                            : projects[currentProject].baslik
+                          {/* Mobilde daha kısa başlık göster */}
+                          {isMobile
+                            ? (projects[currentProject].baslik.length > 25
+                              ? `${projects[currentProject].baslik.substring(0, 25)}...`
+                              : projects[currentProject].baslik)
+                            : (projects[currentProject].baslik.length > 40
+                              ? `${projects[currentProject].baslik.substring(0, 40)}...`
+                              : projects[currentProject].baslik)
                           }
                         </h3>
 
                         {/* Apple-style Subtitle/Category */}
-                        <div className="text-2xl md:text-3xl text-apple-blue font-light tracking-wide">
+                        <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-apple-blue font-light tracking-wide">
                           Web Application
                         </div>
                       </div>
 
                       {/* Apple-style Description */}
-                      <div className="space-y-6 max-w-2xl">
+                      <div className="space-y-3 md:space-y-4 lg:space-y-6 max-w-2xl">
                         <p
-                          className="text-2xl md:text-3xl text-apple-gray-600 dark:text-apple-gray-300 font-light leading-relaxed"
+                          className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-apple-gray-600 dark:text-apple-gray-300 font-light leading-relaxed mobile-project-description tablet-project-description desktop-project-description high-dpi-text mobile-text-select"
                           style={{
                             lineHeight: '1.4',
                             letterSpacing: '0.01em'
                           }}
                         >
-                          {projects[currentProject].aciklama.length > 120
-                            ? `${projects[currentProject].aciklama.substring(0, 120)}...`
-                            : projects[currentProject].aciklama
+                          {/* Mobilde daha kısa açıklama göster */}
+                          {isMobile
+                            ? (projects[currentProject].aciklama.length > 80
+                              ? `${projects[currentProject].aciklama.substring(0, 80)}...`
+                              : projects[currentProject].aciklama)
+                            : (projects[currentProject].aciklama.length > 120
+                              ? `${projects[currentProject].aciklama.substring(0, 120)}...`
+                              : projects[currentProject].aciklama)
                           }
                         </p>
                       </div>
 
                       {/* Apple-style Tech Stack */}
-                      <div className="space-y-4">
-                        <h4 className="text-lg font-medium text-apple-gray-700 dark:text-apple-gray-300 uppercase tracking-wide">
+                      <div className="space-y-2 md:space-y-3 lg:space-y-4">
+                        <h4 className="text-sm md:text-base lg:text-lg font-medium text-apple-gray-700 dark:text-apple-gray-300 uppercase tracking-wide">
                           Teknolojiler
                         </h4>
-                        <div className="flex flex-wrap gap-3">
-                          {projects[currentProject].teknolojiler.slice(0, 5).map((tech, i) => (
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2 lg:gap-3">
+                          {/* Mobilde daha az teknoloji göster */}
+                          {projects[currentProject].teknolojiler.slice(0, isMobile ? 3 : 5).map((tech, i) => (
                             <span
                               key={i}
-                              className="px-5 py-2.5 bg-apple-gray-100/80 dark:bg-apple-gray-800/80 text-apple-gray-800 dark:text-apple-gray-200 rounded-full text-base font-medium backdrop-blur-sm border border-apple-gray-200/50 dark:border-apple-gray-700/50"
+                              className="px-2 py-1.5 sm:px-3 sm:py-2 lg:px-5 lg:py-2.5 bg-apple-gray-100/80 dark:bg-apple-gray-800/80 text-apple-gray-800 dark:text-apple-gray-200 rounded-full text-xs sm:text-sm lg:text-base font-medium backdrop-blur-sm border border-apple-gray-200/50 dark:border-apple-gray-700/50 whitespace-nowrap mobile-tech-tag high-dpi-border"
                             >
                               {tech}
                             </span>
                           ))}
-                          {projects[currentProject].teknolojiler.length > 5 && (
-                            <span className="px-5 py-2.5 bg-apple-gray-100/50 dark:bg-apple-gray-800/50 text-apple-gray-500 dark:text-apple-gray-500 rounded-full text-base font-medium backdrop-blur-sm border border-apple-gray-200/30 dark:border-apple-gray-700/30">
-                              +{projects[currentProject].teknolojiler.length - 5} daha
+                          {projects[currentProject].teknolojiler.length > (isMobile ? 3 : 5) && (
+                            <span className="px-2 py-1.5 sm:px-3 sm:py-2 lg:px-5 lg:py-2.5 bg-apple-gray-100/50 dark:bg-apple-gray-800/50 text-apple-gray-500 dark:text-apple-gray-500 rounded-full text-xs sm:text-sm lg:text-base font-medium backdrop-blur-sm border border-apple-gray-200/30 dark:border-apple-gray-700/30 whitespace-nowrap">
+                              +{projects[currentProject].teknolojiler.length - (isMobile ? 3 : 5)} daha
                             </span>
                           )}
                         </div>
                       </div>
 
                       {/* Apple-style Action Buttons */}
-                      <div className="flex flex-col sm:flex-row gap-4 pt-8">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 pt-4 md:pt-6 lg:pt-8">
                         {projects[currentProject].canli_demo_url && (
                           <a
                             href={projects[currentProject].canli_demo_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group inline-flex items-center gap-4 px-10 py-5 bg-apple-blue text-white rounded-2xl font-medium text-xl shadow-apple hover:shadow-apple-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                            className="group inline-flex items-center justify-center gap-2 sm:gap-3 lg:gap-4 px-4 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-5 bg-apple-blue text-white rounded-lg sm:rounded-xl lg:rounded-2xl font-medium text-sm sm:text-base lg:text-lg xl:text-xl shadow-apple hover:shadow-apple-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] min-h-[44px] touch-manipulation mobile-touch-button touch-button ios-button touch-no-hover"
                           >
-                            <span>Projeyi İncele</span>
-                            <ExternalLink size={22} className="group-hover:translate-x-1 transition-transform duration-300" />
+                            <span className="whitespace-nowrap">Projeyi İncele</span>
+                            <ExternalLink size={16} className="sm:size-[18px] lg:size-[20px] xl:size-[22px] group-hover:translate-x-1 transition-transform duration-300 flex-shrink-0" />
                           </a>
                         )}
 
@@ -386,10 +441,10 @@ const ProjectsPage = () => {
                             href={projects[currentProject].github_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group inline-flex items-center gap-4 px-10 py-5 bg-white/80 dark:bg-apple-gray-800/80 text-apple-gray-900 dark:text-white rounded-2xl font-medium text-xl shadow-apple hover:shadow-apple-lg border border-apple-gray-200/50 dark:border-apple-gray-700/50 backdrop-blur-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                            className="group inline-flex items-center justify-center gap-2 sm:gap-3 lg:gap-4 px-4 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-5 bg-white/80 dark:bg-apple-gray-800/80 text-apple-gray-900 dark:text-white rounded-lg sm:rounded-xl lg:rounded-2xl font-medium text-sm sm:text-base lg:text-lg xl:text-xl shadow-apple hover:shadow-apple-lg border border-apple-gray-200/50 dark:border-apple-gray-700/50 backdrop-blur-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] min-h-[44px] touch-manipulation mobile-touch-button touch-button ios-button touch-no-hover high-dpi-border"
                           >
-                            <span>Kaynak Kodu</span>
-                            <Github size={22} className="group-hover:rotate-12 transition-transform duration-300" />
+                            <span className="whitespace-nowrap">Kaynak Kodu</span>
+                            <Github size={16} className="sm:size-[18px] lg:size-[20px] xl:size-[22px] group-hover:rotate-12 transition-transform duration-300 flex-shrink-0" />
                           </a>
                         )}
                       </div>
@@ -398,11 +453,11 @@ const ProjectsPage = () => {
                 </div>
 
                 {/* Sağ Taraf - Apple-style Project Visual */}
-                <div className="relative min-h-[600px] flex items-center justify-center">
+                <div className="relative min-h-[250px] sm:min-h-[300px] md:min-h-[350px] lg:min-h-[600px] flex items-center justify-center order-1 lg:order-2">
                   {projects[currentProject] && (
                     <div
                       ref={(el) => (imageRefs.current[currentProject] = el)}
-                      className="relative w-full max-w-lg"
+                      className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg"
                     >
                       {/* Apple-style Ambient Glow */}
                       <div className="absolute -inset-8 bg-gradient-to-r from-apple-blue/8 via-apple-purple/8 to-apple-blue/8 rounded-[2rem] blur-3xl opacity-80"></div>
@@ -431,7 +486,8 @@ const ProjectsPage = () => {
                             <img
                               src={projects[currentProject].gorsel_url}
                               alt={projects[currentProject].baslik}
-                              className="w-full h-[480px] object-cover"
+                              className="w-full h-[200px] sm:h-[240px] md:h-[280px] lg:h-[400px] xl:h-[480px] object-cover object-top mobile-project-image mobile-optimized"
+                              loading="lazy"
                             />
 
                             {/* Apple-style Reflection */}
@@ -444,8 +500,8 @@ const ProjectsPage = () => {
                         <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-apple-purple/10 rounded-full blur-xl animate-float"></div>
                       </div>
 
-                      {/* Apple-style Quick Actions */}
-                      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex gap-4">
+                      {/* Apple-style Quick Actions - Desktop only */}
+                      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 gap-4 hidden lg:flex">
                         {projects[currentProject].github_url && (
                           <a
                             href={projects[currentProject].github_url}
